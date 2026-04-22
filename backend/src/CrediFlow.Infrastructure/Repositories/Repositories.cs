@@ -395,13 +395,28 @@ public class ListaPrecioRepository : IListaPrecioRepository
     public ListaPrecioRepository(CrediFlowDbContext ctx) => _ctx = ctx;
 
     public async Task<ListaPrecio?> GetByIdAsync(Guid id, CancellationToken ct = default)
-        => await _ctx.ListasPrecios.FindAsync(new object[] { id }, ct);
+        => await _ctx.ListasPrecios
+            .Include(l => l.Items)
+                .ThenInclude(i => i.Producto)
+            .FirstOrDefaultAsync(l => l.Id == id, ct);
 
     public async Task<IEnumerable<ListaPrecio>> GetAllAsync(CancellationToken ct = default)
-        => await _ctx.ListasPrecios.Where(l => l.Activa).ToListAsync(ct);
+        => await _ctx.ListasPrecios
+            .Where(l => l.Activa)
+            .Include(l => l.Items)
+                .ThenInclude(i => i.Producto)
+            .ToListAsync(ct);
 
     public async Task AddAsync(ListaPrecio lista, CancellationToken ct = default)
         => await _ctx.ListasPrecios.AddAsync(lista, ct);
+
+    public async Task AddItemAsync(ListaPrecioItem item, CancellationToken ct = default)
+        => await _ctx.ListasPreciosItems.AddAsync(item, ct);
+
+    public async Task<ListaPrecioItem?> GetItemByIdAsync(Guid id, CancellationToken ct = default)
+        => await _ctx.ListasPreciosItems.FirstOrDefaultAsync(i => i.Id == id, ct);
+
+    public void RemoveItem(ListaPrecioItem item) => _ctx.ListasPreciosItems.Remove(item);
 
     public void Update(ListaPrecio lista) => _ctx.ListasPrecios.Update(lista);
 }
