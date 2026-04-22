@@ -24,10 +24,12 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !original._retry) {
       original._retry = true
       try {
-        const { refreshToken, updateToken, logout } = useAuthStore.getState()
+        const { refreshToken, updateToken } = useAuthStore.getState()
         const res = await axios.post(`${API_URL}/api/auth/refresh`, { refreshToken })
-        updateToken(res.data.accessToken, res.data.refreshToken)
-        original.headers.Authorization = `Bearer ${res.data.accessToken}`
+        const accessToken = res.data.accessToken ?? res.data.AccessToken
+        const newRefreshToken = res.data.refreshToken ?? res.data.RefreshToken
+        updateToken(accessToken, newRefreshToken)
+        original.headers.Authorization = `Bearer ${accessToken}`
         return api(original)
       } catch {
         useAuthStore.getState().logout()
@@ -159,6 +161,11 @@ export const ventasApi = {
   registrarContado: (data: any) => api.post('/ventas/contado', data),
   getRecientes: () => api.get('/ventas/recientes')
 }
+
+export const reportesApi = {
+  getDeudores: () => api.get('/reportes/deudores')
+}
+
 export const parametricasApi = {
   getOcupaciones: (soloActivas = true) => api.get('/parametricas/ocupaciones', { params: { soloActivas } }),
   createOcupacion: (data: any) => api.post('/parametricas/ocupaciones', data),

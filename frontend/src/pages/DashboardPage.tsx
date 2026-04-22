@@ -3,7 +3,9 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell,
 } from 'recharts'
+import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '../store/authStore'
+import { dashboardApi } from '../api/client'
 
 // ─── HELPERS ────────────────────────────────────────────────────────────────
 const formatMoney = (v: number) =>
@@ -82,17 +84,46 @@ export default function DashboardPage() {
   const { usuario } = useAuthStore()
   const isAdmin = usuario?.rol !== 'VENDEDOR'
 
-  // En un entorno real, se usaría:
-  // const { data: kpi } = useQuery({ queryKey: ['kpi'], queryFn: () => dashboardApi.getKpi().then(r => r.data) })
-  // Por ahora usamos mock data
-  const kpi = MOCK_KPI
-  const evolucion = MOCK_EVOLUCION
-  const cartera = MOCK_CARTERA
-  const ranking = MOCK_RANKING
-  const aging = MOCK_AGING
-  const flujo = MOCK_FLUJO
-  const mapa = MOCK_MAPA
-  const alertas = MOCK_ALERTAS
+  const { data: kpi = MOCK_KPI } = useQuery({
+    queryKey: ['dashboard', 'kpi'],
+    queryFn: () => dashboardApi.getKpi().then(r => r.data),
+    retry: 1,
+  })
+  const { data: evolucion = MOCK_EVOLUCION } = useQuery({
+    queryKey: ['dashboard', 'evolucion'],
+    queryFn: () => dashboardApi.getEvolucionMensual(6).then(r => r.data),
+    retry: 1,
+  })
+  const { data: cartera = MOCK_CARTERA } = useQuery({
+    queryKey: ['dashboard', 'cartera'],
+    queryFn: () => dashboardApi.getDistribucionCartera().then(r => r.data),
+    retry: 1,
+  })
+  const { data: ranking = MOCK_RANKING } = useQuery({
+    queryKey: ['dashboard', 'ranking'],
+    queryFn: () => dashboardApi.getRankingVendedores().then(r => r.data),
+    retry: 1,
+  })
+  const { data: aging = MOCK_AGING } = useQuery({
+    queryKey: ['dashboard', 'aging'],
+    queryFn: () => dashboardApi.getAgingDeuda().then(r => r.data),
+    retry: 1,
+  })
+  const { data: flujo = MOCK_FLUJO } = useQuery({
+    queryKey: ['dashboard', 'flujo'],
+    queryFn: () => dashboardApi.getFlujoCaja().then(r => r.data),
+    retry: 1,
+  })
+  const { data: mapa = MOCK_MAPA } = useQuery({
+    queryKey: ['dashboard', 'mapa'],
+    queryFn: () => dashboardApi.getMapaMora().then(r => r.data),
+    retry: 1,
+  })
+  const { data: alertas = MOCK_ALERTAS } = useQuery({
+    queryKey: ['dashboard', 'alertas'],
+    queryFn: () => dashboardApi.getAlertas().then(r => r.data),
+    retry: 1,
+  })
   const cierre = MOCK_CIERRE
 
   const pctCobranza = Math.round((kpi.cobradoHoy / kpi.metaCobradoHoy) * 100)

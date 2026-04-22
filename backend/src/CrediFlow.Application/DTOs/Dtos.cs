@@ -185,3 +185,11 @@ public record VentaDto(
 public record VentaItemDto(
     Guid ProductoId, string ProductoNombre,
     int Cantidad, decimal PrecioBase, decimal PrecioUnitario, decimal Subtotal);
+
+// ─── REPORTES ────────────────────────────────────────────────────────────────
+public record DeudorReporteDto(
+    Guid ClienteId,
+    string Cliente,
+    string Zona,
+    decimal Deuda,
+    string Mora);
