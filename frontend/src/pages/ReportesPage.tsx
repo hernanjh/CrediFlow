@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { ventasApi, inventarioApi } from '../api/client'
+import { ventasApi, inventarioApi, reportesApi } from '../api/client'
 import { exportToExcel, exportToPDF } from '../utils/exportUtils'
 import { toast } from 'react-hot-toast'
 
@@ -20,13 +20,10 @@ export default function ReportesPage() {
     queryFn: () => inventarioApi.getProductos().then(r => r.data) 
   })
 
-  // Data agrupada para deudores (Simulado)
-  const deudores = [
-    { cliente: 'Héctor Heguykózi', zona: 'Buenos Aires', deuda: 125000, mora: '15 días' },
-    { cliente: 'Insumos Industriales S.A.', zona: 'Santa Fe', deuda: 450000, mora: '4 días' },
-    { cliente: 'Distribuidora Norte', zona: 'Salta', deuda: 89000, mora: '0 días' },
-    { cliente: 'Taller San José', zona: 'Córdoba', deuda: 32000, mora: '32 días' },
-  ]
+  const { data: deudores = [], isLoading: loadingDeudores } = useQuery({
+    queryKey: ['reporte-deudores'],
+    queryFn: () => reportesApi.getDeudores().then(r => r.data)
+  })
 
   const handleExportExcel = () => {
     try {
@@ -86,7 +83,7 @@ export default function ReportesPage() {
         </div>
       </div>
 
-      <div className="grid-2" style={{ gridTemplateColumns: '340px 1fr' }}>
+      <div className="grid-2" style={{ gridTemplateColumns: 'minmax(240px, 340px) 1fr' }}>
         
         {/* CATALOGO */}
         <div className="flex-column gap-3">
@@ -177,7 +174,9 @@ export default function ReportesPage() {
                 </tbody>
               </table>
             )}
-            {((selectedReport === 'VENTAS' && ventas.length === 0) || (selectedReport === 'STOCK' && productos.length === 0)) && (
+            {((selectedReport === 'VENTAS' && ventas.length === 0) ||
+              (selectedReport === 'STOCK' && productos.length === 0) ||
+              (selectedReport === 'DEUDORES' && deudores.length === 0)) && (
                 <div className="text-center py-20 text-muted">No hay datos suficientes para generar este reporte.</div>
             )}
           </div>
@@ -187,4 +186,3 @@ export default function ReportesPage() {
     </div>
   )
 }
-

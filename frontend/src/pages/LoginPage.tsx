@@ -4,6 +4,7 @@ import { authApi } from '../api/client'
 import { useAuthStore } from '../store/authStore'
 
 export default function LoginPage() {
+  const demoEnabled = import.meta.env.VITE_ENABLE_DEMO === 'true'
   const navigate = useNavigate()
   const { login } = useAuthStore()
   const [email, setEmail] = useState('')
@@ -21,7 +22,7 @@ export default function LoginPage() {
       login(accessToken, refreshToken, usuario)
       navigate('/dashboard')
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Credenciales inválidas. Verifique email y contraseña.')
+      setError(err.response?.data?.error || err.response?.data?.Error || 'Credenciales inválidas. Verifique email y contraseña.')
     } finally {
       setLoading(false)
     }
@@ -103,27 +104,29 @@ export default function LoginPage() {
           </button>
         </form>
 
+        {demoEnabled && (
           <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid var(--color-border)' }}>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 10, textAlign: 'center' }}>
-            Acceso directo (modo demo — sin backend)
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 10, textAlign: 'center' }}>
+              Acceso directo (modo demo — sin backend)
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                className="btn btn-ghost btn-sm"
+                style={{ flex: 1 }}
+                onClick={() => enterDemoMode('admin')}
+              >
+                👑 SuperAdmin Demo
+              </button>
+              <button
+                className="btn btn-ghost btn-sm"
+                style={{ flex: 1 }}
+                onClick={() => enterDemoMode('vendedor')}
+              >
+                🏃 Vendedor Demo
+              </button>
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button
-              className="btn btn-ghost btn-sm"
-              style={{ flex: 1 }}
-              onClick={() => enterDemoMode('admin')}
-            >
-              👑 SuperAdmin Demo
-            </button>
-            <button
-              className="btn btn-ghost btn-sm"
-              style={{ flex: 1 }}
-              onClick={() => enterDemoMode('vendedor')}
-            >
-              🏃 Vendedor Demo
-            </button>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   )

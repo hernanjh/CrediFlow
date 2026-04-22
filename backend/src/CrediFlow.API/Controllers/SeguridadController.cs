@@ -1,9 +1,11 @@
 using CrediFlow.Application.Features.Seguridad;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CrediFlow.API.Controllers;
 
+[Authorize]
 public class SeguridadController : BaseApiController
 {
     private readonly IMediator _mediator;

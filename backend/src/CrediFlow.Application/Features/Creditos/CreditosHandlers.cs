@@ -24,6 +24,7 @@ public record SyncPagosOfflineCommand(
 
 // ─── QUERIES ────────────────────────────────────────────────────────────────
 public record GetCreditoByIdQuery(Guid Id) : IRequest<Result<CreditoDto>>;
+public record GetCreditosQuery : IRequest<Result<IEnumerable<CreditoDto>>>;
 public record GetCreditosByClienteQuery(Guid ClienteId) : IRequest<Result<IEnumerable<CreditoDto>>>;
 public record GetHojaRutaQuery(Guid VendedorId, DateTime? Fecha = null) : IRequest<Result<IEnumerable<HojaRutaItemDto>>>;
 
@@ -137,6 +138,107 @@ public class RegistrarPagoHandler : IRequestHandler<RegistrarPagoCommand, Result
     }
 }
 
+public class GetCreditoByIdHandler : IRequestHandler<GetCreditoByIdQuery, Result<CreditoDto>>
+{
+    private readonly IUnitOfWork _uow;
+
+    public GetCreditoByIdHandler(IUnitOfWork uow) => _uow = uow;
+
+    public async Task<Result<CreditoDto>> Handle(GetCreditoByIdQuery request, CancellationToken ct)
+    {
+        var credito = await _uow.Creditos.GetByIdWithCuotasAsync(request.Id, ct);
+        if (credito is null) return Result<CreditoDto>.Failure("Crédito no encontrado.");
+
+        var dto = new CreditoDto(
+            credito.Id,
+            credito.ClienteId,
+            credito.Cliente?.NombreCompleto ?? string.Empty,
+            credito.Cliente?.DNI ?? string.Empty,
+            credito.VendedorId,
+            credito.Vendedor?.NombreCompleto ?? string.Empty,
+            credito.Capital,
+            credito.TasaInteres,
+            credito.TasaMoratoria,
+            credito.NumeroCuotas,
+            credito.Frecuencia,
+            credito.MontoTotalConInteres,
+            credito.MontoPorCuota,
+            credito.SaldoPendiente,
+            credito.FechaOtorgamiento,
+            credito.FechaPrimerVencimiento,
+            credito.Estado,
+            credito.Observaciones,
+            credito.Cuotas
+                .OrderBy(x => x.NumeroCuota)
+                .Select(x => new CuotaDto(
+                    x.Id,
+                    x.NumeroCuota,
+                    x.FechaVencimiento,
+                    x.MontoOriginal,
+                    x.MontoPagado,
+                    x.InteresMora,
+                    x.SaldoPendiente,
+                    x.Estado,
+                    x.EstaVencida,
+                    x.DiasVencido,
+                    x.FechaPago))
+                .ToList()
+        );
+
+        return Result<CreditoDto>.Success(dto);
+    }
+}
+
+public class GetCreditosByClienteHandler : IRequestHandler<GetCreditosByClienteQuery, Result<IEnumerable<CreditoDto>>>
+{
+    private readonly IUnitOfWork _uow;
+
+    public GetCreditosByClienteHandler(IUnitOfWork uow) => _uow = uow;
+
+    public async Task<Result<IEnumerable<CreditoDto>>> Handle(GetCreditosByClienteQuery request, CancellationToken ct)
+    {
+        var creditos = await _uow.Creditos.GetByClienteAsync(request.ClienteId, ct);
+
+        var dtos = creditos.Select(credito => new CreditoDto(
+            credito.Id,
+            credito.ClienteId,
+            credito.Cliente?.NombreCompleto ?? string.Empty,
+            credito.Cliente?.DNI ?? string.Empty,
+            credito.VendedorId,
+            credito.Vendedor?.NombreCompleto ?? string.Empty,
+            credito.Capital,
+            credito.TasaInteres,
+            credito.TasaMoratoria,
+            credito.NumeroCuotas,
+            credito.Frecuencia,
+            credito.MontoTotalConInteres,
+            credito.MontoPorCuota,
+            credito.SaldoPendiente,
+            credito.FechaOtorgamiento,
+            credito.FechaPrimerVencimiento,
+            credito.Estado,
+            credito.Observaciones,
+            credito.Cuotas
+                .OrderBy(x => x.NumeroCuota)
+                .Select(x => new CuotaDto(
+                    x.Id,
+                    x.NumeroCuota,
+                    x.FechaVencimiento,
+                    x.MontoOriginal,
+                    x.MontoPagado,
+                    x.InteresMora,
+                    x.SaldoPendiente,
+                    x.Estado,
+                    x.EstaVencida,
+                    x.DiasVencido,
+                    x.FechaPago))
+                .ToList()
+        ));
+
+        return Result<IEnumerable<CreditoDto>>.Success(dtos);
+    }
+}
+
 public class GetHojaRutaHandler : IRequestHandler<GetHojaRutaQuery, Result<IEnumerable<HojaRutaItemDto>>>
 {
     private readonly IUnitOfWork _uow;
@@ -165,6 +267,56 @@ public class GetHojaRutaHandler : IRequestHandler<GetHojaRutaQuery, Result<IEnum
                 .FirstOrDefault()));
 
         return Result<IEnumerable<HojaRutaItemDto>>.Success(items);
+    }
+}
+
+public class GetCreditosHandler : IRequestHandler<GetCreditosQuery, Result<IEnumerable<CreditoDto>>>
+{
+    private readonly IUnitOfWork _uow;
+
+    public GetCreditosHandler(IUnitOfWork uow) => _uow = uow;
+
+    public async Task<Result<IEnumerable<CreditoDto>>> Handle(GetCreditosQuery request, CancellationToken ct)
+    {
+        var creditos = await _uow.Creditos.GetActivosAsync(ct);
+
+        var dtos = creditos.Select(c => new CreditoDto(
+            c.Id,
+            c.ClienteId,
+            c.Cliente?.NombreCompleto ?? string.Empty,
+            c.Cliente?.DNI ?? string.Empty,
+            c.VendedorId,
+            c.Vendedor?.NombreCompleto ?? string.Empty,
+            c.Capital,
+            c.TasaInteres,
+            c.TasaMoratoria,
+            c.NumeroCuotas,
+            c.Frecuencia,
+            c.MontoTotalConInteres,
+            c.MontoPorCuota,
+            c.SaldoPendiente,
+            c.FechaOtorgamiento,
+            c.FechaPrimerVencimiento,
+            c.Estado,
+            c.Observaciones,
+            c.Cuotas
+                .OrderBy(x => x.NumeroCuota)
+                .Select(x => new CuotaDto(
+                    x.Id,
+                    x.NumeroCuota,
+                    x.FechaVencimiento,
+                    x.MontoOriginal,
+                    x.MontoPagado,
+                    x.InteresMora,
+                    x.SaldoPendiente,
+                    x.Estado,
+                    x.EstaVencida,
+                    x.DiasVencido,
+                    x.FechaPago))
+                .ToList()
+        ));
+
+        return Result<IEnumerable<CreditoDto>>.Success(dtos);
     }
 }
 

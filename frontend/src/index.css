@@ -498,6 +498,36 @@ body {
   .col-4, .col-6, .col-8 { grid-column: span 12; }
 }
 
+@media (max-width: 900px) {
+  .app-layout { display: block; }
+
+  .sidebar {
+    position: static;
+    width: 100%;
+    height: auto;
+    max-height: 45vh;
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .topbar {
+    position: static;
+    left: 0;
+    height: auto;
+    min-height: var(--topbar-height);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .main-content {
+    margin-left: 0;
+    padding-top: 0;
+  }
+
+  .page-container { padding: var(--space-4); }
+
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+}
+
 /* ─── CHART CONTAINERS ─────────────────────────────────────────────────── */
 .chart-container {
   background: var(--color-surface);

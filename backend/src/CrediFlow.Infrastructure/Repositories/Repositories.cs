@@ -50,13 +50,28 @@ public class CreditoRepository : ICreditoRepository
             .FirstOrDefaultAsync(c => c.Id == id, ct);
 
     public async Task<IEnumerable<Credito>> GetByClienteAsync(Guid clienteId, CancellationToken ct = default)
-        => await _ctx.Creditos.Include(c => c.Cuotas).Where(c => c.ClienteId == clienteId).ToListAsync(ct);
+        => await _ctx.Creditos
+            .Include(c => c.Cuotas)
+            .Include(c => c.Cliente)
+            .Include(c => c.Vendedor)
+            .Where(c => c.ClienteId == clienteId)
+            .ToListAsync(ct);
 
     public async Task<IEnumerable<Credito>> GetActivosAsync(CancellationToken ct = default)
-        => await _ctx.Creditos.Where(c => c.Estado != EstadoCredito.CANCELADO).ToListAsync(ct);
+        => await _ctx.Creditos
+            .Include(c => c.Cliente)
+            .Include(c => c.Vendedor)
+            .Include(c => c.Cuotas)
+            .Where(c => c.Estado != EstadoCredito.CANCELADO)
+            .ToListAsync(ct);
 
     public async Task<IEnumerable<Credito>> GetConMoraAsync(CancellationToken ct = default)
-        => await _ctx.Creditos.Where(c => c.Estado == EstadoCredito.EN_MORA || c.Estado == EstadoCredito.EN_MORA_GRAVE).ToListAsync(ct);
+        => await _ctx.Creditos
+            .Include(c => c.Cuotas)
+            .Include(c => c.Cliente)
+                .ThenInclude(cl => cl!.Zona)
+            .Where(c => c.Estado == EstadoCredito.EN_MORA || c.Estado == EstadoCredito.EN_MORA_GRAVE)
+            .ToListAsync(ct);
 
     public async Task AddAsync(Credito credito, CancellationToken ct = default)
         => await _ctx.Creditos.AddAsync(credito, ct);

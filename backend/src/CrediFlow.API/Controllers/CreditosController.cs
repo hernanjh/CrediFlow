@@ -12,6 +12,13 @@ public class CreditosController : BaseApiController
     private readonly IMediator _mediator;
     public CreditosController(IMediator mediator) => _mediator = mediator;
 
+    [HttpGet]
+    public async Task<IActionResult> GetAll(CancellationToken ct)
+    {
+        var result = await _mediator.Send(new GetCreditosQuery(), ct);
+        return HandleResult(result);
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
     {
