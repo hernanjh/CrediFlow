@@ -110,6 +110,9 @@ public interface IListaPrecioRepository
     Task<ListaPrecio?> GetByIdAsync(Guid id, CancellationToken ct = default);
     Task<IEnumerable<ListaPrecio>> GetAllAsync(CancellationToken ct = default);
     Task AddAsync(ListaPrecio lista, CancellationToken ct = default);
+    Task AddItemAsync(ListaPrecioItem item, CancellationToken ct = default);
+    Task<ListaPrecioItem?> GetItemByIdAsync(Guid id, CancellationToken ct = default);
+    void RemoveItem(ListaPrecioItem item);
     void Update(ListaPrecio lista);
 }
 

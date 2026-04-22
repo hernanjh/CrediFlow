@@ -73,6 +73,8 @@ public class ListaPreciosHandlers :
     {
         var lista = await _uow.ListasPrecios.GetByIdAsync(req.ListaPrecioId);
         if (lista == null) return Result<Guid>.Failure("Lista no encontrada");
+        if (!req.PrecioFijo.HasValue && !req.PorcentajeOverride.HasValue)
+            return Result<Guid>.Failure("Debe indicar un precio fijo o un porcentaje de ajuste.");
 
         var item = new ListaPrecioItem
         {
@@ -83,21 +85,17 @@ public class ListaPreciosHandlers :
             PorcentajeOverride = req.PorcentajeOverride
         };
 
-        // En una implementación real, podríamos agregar esto a un IListaPrecioItemRepository
-        // Por ahora, asumimos que DBContext lo maneja o agregamos un repo si es necesario.
-        // Como no tenemos repo específico en IUnitOfWork para Items, lo agregamos vía la entidad ListaPrecio si tiene colección navegable.
-        
-        // Pero para simplicidad en este sprint, asumimos que podemos persistir vía EF directamente si ListaPrecio tiene la colección cargada.
-        // O mejor, agregamos el método al Repo.
-        
-        // Simulación:
-        await _uow.SaveChangesAsync(ct); // Esto es solo un placeholder si no hay repo
+        await _uow.ListasPrecios.AddItemAsync(item, ct);
+        await _uow.SaveChangesAsync(ct);
         return Result<Guid>.Success(item.Id);
     }
 
     public async Task<Result> Handle(EliminarItemListaPrecioCommand req, CancellationToken ct)
     {
-        // Placeholder
+        var item = await _uow.ListasPrecios.GetItemByIdAsync(req.Id, ct);
+        if (item == null) return Result.Failure("Item de lista no encontrado");
+
+        _uow.ListasPrecios.RemoveItem(item);
         await _uow.SaveChangesAsync(ct);
         return Result.Success();
     }
